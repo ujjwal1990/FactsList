@@ -1,7 +1,9 @@
-package app.infy.com.factslist;
+package app.infy.com.factslist.view.activities;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+
+import app.infy.com.factslist.R;
 
 public class MainActivity extends AppCompatActivity {
 
