@@ -16,14 +16,15 @@ import app.infy.com.factslist.viewmodel.FactsListItemViewModel;
 
 public class FactsAdapter extends RecyclerView.Adapter<FactsAdapter.FactsAdapterViewHolder> {
 
-    private List<Rows> factsList;
-    Context context;
+    private List<Rows> mFactsList;
+    Context mContext;
 
     public FactsAdapter(Context context) {
-        this.factsList = Collections.emptyList();
-        this.context = context;
+        this.mFactsList = Collections.emptyList();
+        this.mContext = context;
     }
 
+    /*Inflating the views with and applying DataBinding concept with the views*/
     @Override
     public FactsAdapterViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         FactsRowItemsBinding itemsBinding = DataBindingUtil.inflate(LayoutInflater.from(parent.getContext()), R.layout.facts_row_items, parent, false);
@@ -32,28 +33,33 @@ public class FactsAdapter extends RecyclerView.Adapter<FactsAdapter.FactsAdapter
 
     @Override
     public void onBindViewHolder(FactsAdapterViewHolder holder, int position) {
-        holder.bindFacts(factsList.get(position), context);
+        holder.bindFacts(mFactsList.get(position), mContext);
     }
 
     @Override
     public int getItemCount() {
-        return factsList.size();
+        return mFactsList.size();
     }
 
-    public void setFactsList(List<Rows> factsList) {
-        this.factsList = factsList;
+    /*method to change the data in list and update the RecyclerView*/
+    public void setmFactsList(List<Rows> mFactsList) {
+        this.mFactsList = mFactsList;
         notifyDataSetChanged();
     }
 
+    /*A view holder class which will have the reference of all views used in the Row*/
     public static class FactsAdapterViewHolder extends RecyclerView.ViewHolder {
         FactsRowItemsBinding mItemBinding;
 
+        /*constructor for the class*/
         public FactsAdapterViewHolder(FactsRowItemsBinding mItemBinding) {
             super(mItemBinding.itemFacts);
             this.mItemBinding = mItemBinding;
         }
 
+        /*method to change the data in the row by reusing the existing row on scroll*/
         void bindFacts(Rows rows, Context context) {
+            /*reusing the view and changing the contents base don the position it will optimize the scrolling */
             if (mItemBinding.getFactsViewModel() == null) {
                 mItemBinding.setFactsViewModel(new FactsListItemViewModel(rows, context));
             } else {

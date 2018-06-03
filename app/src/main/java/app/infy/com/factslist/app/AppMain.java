@@ -8,6 +8,7 @@ import io.reactivex.schedulers.Schedulers;
 public class AppMain extends Application {
     private Scheduler scheduler;
 
+    /*creating the scheduler object it will used it rx call*/
     public Scheduler subscribeScheduler() {
         if (scheduler == null) {
             scheduler = Schedulers.io();

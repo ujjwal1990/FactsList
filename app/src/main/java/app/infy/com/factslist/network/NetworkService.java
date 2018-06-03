@@ -7,7 +7,7 @@ import retrofit2.http.Url;
 
 public interface NetworkService {
     /**
-     * get the account details
+     * get the facts details
      */
     @GET()
     Observable<FactsDataResponse> getFactsData(@Url String url);

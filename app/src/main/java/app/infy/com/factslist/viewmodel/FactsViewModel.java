@@ -7,7 +7,6 @@ import android.databinding.ObservableInt;
 import android.support.annotation.NonNull;
 import android.view.View;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
@@ -24,23 +23,29 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
-import okhttp3.internal.Util;
 
-public class FactsViewModel extends Observable implements Serializable {
+/*view model class for fragment recyclerview it will handle all the network call updation of the recyclerview (for updation we used DataBinding)*/
+public class FactsViewModel extends Observable {
 
+    /*we are using observables to pretend the current state of the api call and showing the views based o these observables*/
+    /*progress obsevable to show progressbar before getting the data from api call*/
     public ObservableInt progressBar;
+    /*pull to refresh observable*/
     public ObservableBoolean isRefreshing;
+    /*recycler view observable*/
     public ObservableInt factsRecycler;
-    //    public ObservableInt ;
+    /*Message observable to show the different state mesaages to the user*/
     public ObservableInt factsLabel;
+    /*Message field to change the text message*/
     public ObservableField<String> messageLabel;
-    public ObservableField<String> title;
 
+    public ObservableField<String> title;
     private String toolBarTitle;
     private List<Rows> factsList;
     private Context context;
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
 
+    /*constructor to init the data passing the context of the activity from fragment*/
     public FactsViewModel(@NonNull Context context) {
         this.context = context;
         this.factsList = new ArrayList<>();
@@ -55,14 +60,16 @@ public class FactsViewModel extends Observable implements Serializable {
         checkNetworkAndMakeApiCall();
     }
 
+    /*methos to check the network before making he api call*/
     public void checkNetworkAndMakeApiCall() {
         if (AppUtils.isOnline(context)) {
-            initializeViews();
+            setUpToGetDataFromApi();
         } else {
             showNetworkMessage();
         }
     }
 
+    /*methos to show the network not available message*/
     public void showNetworkMessage() {
         messageLabel = new ObservableField<>(context.getString(R.string.no_internet));
         isRefreshing.set(false);
@@ -71,7 +78,8 @@ public class FactsViewModel extends Observable implements Serializable {
         progressBar.set(View.GONE);
     }
 
-    public void initializeViews() {
+    /*methos to make the api call and showing the progress bar till response*/
+    public void setUpToGetDataFromApi() {
         isRefreshing.set(false);
         factsLabel.set(View.GONE);
         factsRecycler.set(View.GONE);
@@ -79,8 +87,8 @@ public class FactsViewModel extends Observable implements Serializable {
         fetchFactsList();
     }
 
+    /*methos for pull to refresh*/
     public void pullToRefresh() {
-
         isRefreshing.set(true);
         factsLabel.set(View.GONE);
         factsRecycler.set(View.VISIBLE);
@@ -88,13 +96,18 @@ public class FactsViewModel extends Observable implements Serializable {
         fetchFactsList();
     }
 
+    /*RXJava 2 call to get the data from the hosted api*/
     private void fetchFactsList() {
-
         AppMain appController = new AppMain();
-
+        /*object for network client to get the retrofit object*/
         NetworkClient networkClient = new NetworkClient();
+        /*object for getting the api instance
+         * NOTE
+         * create() is specifying the api type call
+         * */
         NetworkService networkService = networkClient.getRetrofit().create(NetworkService.class);
 
+        /*api disposable data object*/
         Disposable disposable = networkService.getFactsData(AppConstants.FACTS_PATH)
                 .subscribeOn(appController.subscribeScheduler())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -122,30 +135,40 @@ public class FactsViewModel extends Observable implements Serializable {
         compositeDisposable.add(disposable);
     }
 
+    /*methos to update the List based on the recent response */
     private void updateFactsDataList(List<Rows> factList) {
         factsList.addAll(factList);
+        /*this is a Synchronized method from observable which will change the values accordingly*/
         setChanged();
+        /* If this object has changed, as indicated by the
+         * <code>hasChanged</code> method, then notify all of its observers*/
         notifyObservers();
     }
 
+    /*updating the app toolbar title*/
     public void setTollBarTitle(String title) {
         this.toolBarTitle = title;
     }
+
 
     public String getToolBarTitle() {
         return toolBarTitle;
     }
 
+    /*get the whole list of data*/
     public List<Rows> getFactsList() {
         return factsList;
     }
 
+
+    /*unSubscribe the observable*/
     private void unSubscribeFromObservable() {
         if (compositeDisposable != null && !compositeDisposable.isDisposed()) {
             compositeDisposable.dispose();
         }
     }
 
+    /*resetting the content on OnDestroy of the activity so it wont Observe the data if Activity is not in the stack*/
     public void reset() {
         unSubscribeFromObservable();
         compositeDisposable = null;

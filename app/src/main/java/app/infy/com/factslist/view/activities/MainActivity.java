@@ -25,26 +25,32 @@ public class MainActivity extends AppCompatActivity {
             setSupportActionBar(activityMainBinding.toolbar);
         } else {
             factsListFragment = (FactsListFragment) getSupportFragmentManager().findFragmentByTag(FactsListFragment.class.getName());
-//            addFragment(R.id.container, factsListFragment, factsListFragment.getClass().getName());
         }
 
     }
 
+    /*method to initilizing the fragment and adding it to activity*/
     private void initFragment() {
         factsListFragment = new FactsListFragment();
         addFragment(R.id.container, factsListFragment, factsListFragment.getClass().getName());
     }
 
-
+    /*common method to add different fragments to activity*/
     protected void addFragment(@IdRes int containerViewId, @NonNull Fragment fragment, @NonNull String fragmentTag) {
         getSupportFragmentManager().beginTransaction().add(containerViewId, fragment, fragmentTag)
                 .commit();
     }
 
+    /*method to change the toolbar title from fragments*/
     public void changeToolBarTitle(String title) {
         activityMainBinding.toolbar.setTitle(title);
     }
 
+    /*methos to maintain the activity state on orientation change
+    *
+    * NOTE:
+    * as of now we are not storing any data to the activity and reuse it in configuration change
+     * but if require we can do it by using put primitives in bundle*/
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);

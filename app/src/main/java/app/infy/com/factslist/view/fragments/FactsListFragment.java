@@ -22,37 +22,42 @@ import app.infy.com.factslist.view.activities.MainActivity;
 import app.infy.com.factslist.view.adapter.FactsAdapter;
 import app.infy.com.factslist.viewmodel.FactsViewModel;
 
+/*Main fragment class to show the data in RecyclerView it's lifecycle is associated with MainActivity*/
 public class FactsListFragment extends Fragment implements Observer, SwipeRefreshLayout.OnRefreshListener {
-    private FactsViewModel factsViewModel;
-    FragmentFactsListBinding fragmentFactsListBinding;
-    FactsAdapter factsAdapter;
+    private FactsViewModel mFactsViewModel;
+    private FragmentFactsListBinding mFragmentFactsListBinding;
+    private FactsAdapter mFactsAdapter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        /*retaining the state on device orientation change*/
         setRetainInstance(true);
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        /*checking savedInstanceState in case of orientation change it wont be null because we are retaing the fragment state */
         if (savedInstanceState == null) {
-            fragmentFactsListBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_facts_list, container, false);
+            /*initializing the view we make it global so when the state change we can reuse it*/
+            mFragmentFactsListBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_facts_list, container, false);
             initDataBinding();
-            setUpListOfFacts(fragmentFactsListBinding.listFacts);
-            setUpObserver(factsViewModel);
+            setUpListOfFacts(mFragmentFactsListBinding.listFacts);
+            setUpObserver(mFactsViewModel);
         } else {
-            setUpListOfFacts(fragmentFactsListBinding.listFacts);
+            setUpListOfFacts(mFragmentFactsListBinding.listFacts);
             showDataInView();
         }
 
-        return fragmentFactsListBinding.getRoot();
+        return mFragmentFactsListBinding.getRoot();
     }
 
+    /*method to start the data binding with the fragment views*/
     private void initDataBinding() {
-        factsViewModel = new FactsViewModel(getActivity());
-        fragmentFactsListBinding.setFactsViewModel(factsViewModel);
-        fragmentFactsListBinding.swipeContainer.setOnRefreshListener(this);
+        mFactsViewModel = new FactsViewModel(getActivity());
+        mFragmentFactsListBinding.setFactsViewModel(mFactsViewModel);
+        mFragmentFactsListBinding.swipeContainer.setOnRefreshListener(this);
     }
 
     // set up the list of facts with recycler view
@@ -62,6 +67,7 @@ public class FactsListFragment extends Fragment implements Observer, SwipeRefres
         listFacts.setLayoutManager(new LinearLayoutManager(getActivity()));
     }
 
+
     public void setUpObserver(Observable observable) {
         observable.addObserver(this);
     }
@@ -69,33 +75,38 @@ public class FactsListFragment extends Fragment implements Observer, SwipeRefres
     @Override
     public void update(Observable o, Object arg) {
         if (o instanceof FactsViewModel) {
-            factsViewModel = (FactsViewModel) o;
+            mFactsViewModel = (FactsViewModel) o;
             showDataInView();
         }
     }
 
+    /*method to show the data in recyclerview init the Adapter and setting it in RecyclerView*/
     private void showDataInView() {
-        factsAdapter = (FactsAdapter) fragmentFactsListBinding.listFacts.getAdapter();
-        factsAdapter.setFactsList(factsViewModel.getFactsList());
-        ((MainActivity) getActivity()).changeToolBarTitle(factsViewModel.getToolBarTitle());
+        mFactsAdapter = (FactsAdapter) mFragmentFactsListBinding.listFacts.getAdapter();
+        mFactsAdapter.setmFactsList(mFactsViewModel.getFactsList());
+        ((MainActivity) getActivity()).changeToolBarTitle(mFactsViewModel.getToolBarTitle());
     }
+
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        factsViewModel.reset();
+        mFactsViewModel.reset();
     }
 
+    /*saving the fragment instance state*/
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBoolean(AppConstants.SAVE_FRAGMENT_STATE, true);
-        outState.putSerializable("factsViewModel", factsViewModel);
     }
 
+    /*method to allow the pull to refresh*/
     @Override
     public void onRefresh() {
-        factsViewModel.pullToRefresh();
-        factsViewModel.getFactsList().clear();
+        /*assuming whenever we will pull the data it should be latest one so clearing the
+         existing data in the list and making the api call */
+        mFactsViewModel.pullToRefresh();
+        mFactsViewModel.getFactsList().clear();
     }
 }

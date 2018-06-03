@@ -11,6 +11,7 @@ import com.bumptech.glide.request.RequestOptions;
 
 import app.infy.com.factslist.model.Rows;
 
+/*view model class to change the data in the list row based on the Databinding concept*/
 public class FactsListItemViewModel extends BaseObservable {
 
     private Rows rows;
@@ -45,7 +46,7 @@ public class FactsListItemViewModel extends BaseObservable {
         return rows.getImageHref();
     }
 
-    //
+
     public void setRow(Rows row) {
         this.rows = row;
         notifyChange();
