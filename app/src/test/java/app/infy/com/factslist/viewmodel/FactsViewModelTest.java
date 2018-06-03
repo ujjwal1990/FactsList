@@ -1,12 +1,10 @@
 package app.infy.com.factslist.viewmodel;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.view.View;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,21 +16,18 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.List;
 
 import app.infy.com.factslist.app.AppMain;
+import app.infy.com.factslist.model.Rows;
 import app.infy.com.factslist.network.NetworkClient;
 import app.infy.com.factslist.network.NetworkService;
 import app.infy.com.factslist.utils.AppUtils;
-import io.reactivex.Scheduler;
-import io.reactivex.android.plugins.RxAndroidPlugins;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.internal.schedulers.ExecutorScheduler;
-import io.reactivex.plugins.RxJavaPlugins;
 import io.reactivex.schedulers.Schedulers;
 
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
@@ -105,4 +100,32 @@ public class FactsViewModelTest {
         Assert.assertEquals(mFactsViewModel.factsLabel.get(), View.VISIBLE);
     }
 
+    @Test
+    public void testListDataToValidateHolder() {
+        List<Rows> factList = new ArrayList<>();
+        Rows rowsData;
+        for (int i = 0; i < 10; i++) {
+            rowsData = new Rows();
+            rowsData.setDescription("Description " + i);
+            rowsData.setTitle("Title " + i);
+            rowsData.setImageHref("Image " + i);
+            factList.add(rowsData);
+        }
+        mFactsViewModel.updateFactsDataList(factList);
+        Assert.assertEquals(mFactsViewModel.getFactsList().size(), factList.size());
+    }
+
+    @Test
+    public void testReset() {
+        mFactsViewModel.reset();
+        verify(mFactsViewModel).unSubscribeFromObservable();
+        Assert.assertEquals(mFactsViewModel.mContext, null);
+        Assert.assertEquals(mFactsViewModel.compositeDisposable, null);
+    }
+
+    @Test
+    public void testCompositeDisposable() {
+        mFactsViewModel.unSubscribeFromObservable();
+        Assert.assertEquals(mFactsViewModel.compositeDisposable.isDisposed(), true);
+    }
 }

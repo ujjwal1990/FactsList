@@ -46,10 +46,10 @@ public class FactsViewModel extends Observable {
     public ObservableField<String> messageLabel;
 
     public ObservableField<String> title;
-    private String toolBarTitle;
+    private  String toolBarTitle;
     private List<Rows> factsList;
-    private Context mContext;
-    private CompositeDisposable compositeDisposable = new CompositeDisposable();
+    public Context mContext;
+    public CompositeDisposable compositeDisposable = new CompositeDisposable();
 
     @VisibleForTesting
     public void setNetworkClient(NetworkClient mNetworkClient) {
@@ -161,7 +161,7 @@ public class FactsViewModel extends Observable {
     }
 
     /*methos to update the List based on the recent response */
-    private void updateFactsDataList(List<Rows> factList) {
+    public void updateFactsDataList(List<Rows> factList) {
         factsList.addAll(factList);
         /*this is a Synchronized method from observable which will change the values accordingly*/
         setChanged();
@@ -187,7 +187,7 @@ public class FactsViewModel extends Observable {
 
 
     /*unSubscribe the observable*/
-    private void unSubscribeFromObservable() {
+    public void unSubscribeFromObservable() {
         if (compositeDisposable != null && !compositeDisposable.isDisposed()) {
             compositeDisposable.dispose();
         }
