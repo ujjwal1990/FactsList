@@ -13,59 +13,44 @@
             type="app.infy.com.factslist.viewmodel.FactsViewModel" />
     </data>
 
-    <android.support.v4.widget.DrawerLayout
+
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/colorWhite"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:orientation="vertical">
 
-        <android.support.design.widget.CoordinatorLayout
+
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/swipe_container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fitsSystemWindows="true"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+            android:layout_height="wrap_content"
+            app:refreshing="@{factsViewModel.isRefreshing}">
 
-
-            <LinearLayout
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/list_facts"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:orientation="vertical"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior">
+                android:layout_height="wrap_content"
+                android:background="@color/colorWhite"
+                app:visibility="@{factsViewModel.factsRecycler}" />
+        </android.support.v4.widget.SwipeRefreshLayout>
 
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:visibility="@{factsViewModel.progressBar}" />
 
-                <ProgressBar
-                    android:id="@+id/progress_bar"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:visibility="@{factsViewModel.progressBar}" />
+        <TextView
+            android:id="@+id/label_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="@{factsViewModel.messageLabel}"
+            app:visibility="@{factsViewModel.factsLabel}" />
 
-                <TextView
-                    android:id="@+id/label_status"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="@{factsViewModel.messageLabel}"
-                    app:visibility="@{factsViewModel.factsLabel}" />
-
-                <android.support.v7.widget.RecyclerView
-                    android:id="@+id/list_facts"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@color/colorWhite"
-                    android:clipToPadding="false"
-                    android:scrollbars="vertical"
-                    app:layout_behavior="@string/appbar_scrolling_view_behavior"
-                    app:visibility="@{factsViewModel.factsRecycler}"
-                    tools:listitem="@layout/facts_row_items" />
-
-
-            </LinearLayout>
-
-
-        </android.support.design.widget.CoordinatorLayout>
-
-    </android.support.v4.widget.DrawerLayout>
+    </FrameLayout>
 
 
 </layout>

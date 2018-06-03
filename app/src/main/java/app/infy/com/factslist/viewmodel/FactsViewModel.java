@@ -1,11 +1,13 @@
 package app.infy.com.factslist.viewmodel;
 
 import android.content.Context;
+import android.databinding.ObservableBoolean;
 import android.databinding.ObservableField;
 import android.databinding.ObservableInt;
 import android.support.annotation.NonNull;
 import android.view.View;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
@@ -16,16 +18,20 @@ import app.infy.com.factslist.model.FactsDataResponse;
 import app.infy.com.factslist.model.Rows;
 import app.infy.com.factslist.network.NetworkClient;
 import app.infy.com.factslist.network.NetworkService;
-import app.infy.com.factslist.utils.Constants;
+import app.infy.com.factslist.utils.AppConstants;
+import app.infy.com.factslist.utils.AppUtils;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
+import okhttp3.internal.Util;
 
-public class FactsViewModel extends Observable {
+public class FactsViewModel extends Observable implements Serializable {
 
     public ObservableInt progressBar;
+    public ObservableBoolean isRefreshing;
     public ObservableInt factsRecycler;
+    //    public ObservableInt ;
     public ObservableInt factsLabel;
     public ObservableField<String> messageLabel;
     public ObservableField<String> title;
@@ -38,19 +44,47 @@ public class FactsViewModel extends Observable {
     public FactsViewModel(@NonNull Context context) {
         this.context = context;
         this.factsList = new ArrayList<>();
+
+        isRefreshing = new ObservableBoolean(false);
         progressBar = new ObservableInt(View.GONE);
         factsRecycler = new ObservableInt(View.GONE);
         factsLabel = new ObservableInt(View.VISIBLE);
         title = new ObservableField<>(toolBarTitle);
         messageLabel = new ObservableField<>(context.getString(R.string.error_message_loading_facts));
 
-        initializeViews();
+        checkNetworkAndMakeApiCall();
+    }
+
+    public void checkNetworkAndMakeApiCall() {
+        if (AppUtils.isOnline(context)) {
+            initializeViews();
+        } else {
+            showNetworkMessage();
+        }
+    }
+
+    public void showNetworkMessage() {
+        messageLabel = new ObservableField<>(context.getString(R.string.no_internet));
+        isRefreshing.set(false);
+        factsLabel.set(View.VISIBLE);
+        factsRecycler.set(View.VISIBLE);
+        progressBar.set(View.GONE);
     }
 
     public void initializeViews() {
+        isRefreshing.set(false);
         factsLabel.set(View.GONE);
         factsRecycler.set(View.GONE);
         progressBar.set(View.VISIBLE);
+        fetchFactsList();
+    }
+
+    public void pullToRefresh() {
+
+        isRefreshing.set(true);
+        factsLabel.set(View.GONE);
+        factsRecycler.set(View.VISIBLE);
+        progressBar.set(View.GONE);
         fetchFactsList();
     }
 
@@ -61,7 +95,7 @@ public class FactsViewModel extends Observable {
         NetworkClient networkClient = new NetworkClient();
         NetworkService networkService = networkClient.getRetrofit().create(NetworkService.class);
 
-        Disposable disposable = networkService.getFactsData(Constants.FACTS_PATH)
+        Disposable disposable = networkService.getFactsData(AppConstants.FACTS_PATH)
                 .subscribeOn(appController.subscribeScheduler())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<FactsDataResponse>() {
@@ -69,7 +103,7 @@ public class FactsViewModel extends Observable {
                     public void accept(FactsDataResponse factsResponse) throws Exception {
                         setTollBarTitle(factsResponse.getTitle());
                         updateFactsDataList(factsResponse.getRows());
-
+                        isRefreshing.set(false);
                         progressBar.set(View.GONE);
                         factsLabel.set(View.GONE);
                         factsRecycler.set(View.VISIBLE);
@@ -77,6 +111,7 @@ public class FactsViewModel extends Observable {
                 }, new Consumer<Throwable>() {
                     @Override
                     public void accept(Throwable throwable) throws Exception {
+                        isRefreshing.set(false);
                         messageLabel.set(context.getString(R.string.error_message_loading_facts));
                         progressBar.set(View.GONE);
                         factsLabel.set(View.VISIBLE);

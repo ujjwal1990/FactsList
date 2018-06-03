@@ -2,9 +2,10 @@ package app.infy.com.factslist.model;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class FactsDataResponse {
+public class FactsDataResponse implements Serializable{
     @SerializedName("title")
     private String title;
 

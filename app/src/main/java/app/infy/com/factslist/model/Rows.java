@@ -3,9 +3,11 @@ package app.infy.com.factslist.model;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.io.Serializable;
+
 import io.reactivex.annotations.NonNull;
 
-public class Rows {
+public class Rows implements Serializable{
     @SerializedName("title")
     @NonNull
     String title;

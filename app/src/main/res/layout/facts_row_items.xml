@@ -5,31 +5,32 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
         <import type="android.view.View" />
 
 
         <variable
             name="factsViewModel"
-            type="app.infy.com.factslist.viewmodel.FactsListItemViewModel"/>
+            type="app.infy.com.factslist.viewmodel.FactsListItemViewModel" />
     </data>
 
 
-
-
-
-    <android.support.v7.widget.CardView android:id="@+id/item_facts"
+    <android.support.v7.widget.CardView
+        android:id="@+id/item_facts"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/pad4">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="@dimen/pad8">
 
-            <TextView  android:text="@{factsViewModel.title}"
+            <TextView
                 android:id="@+id/tv_facts_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="@{factsViewModel.title}"
                 android:textColor="@color/colorPrimaryDark"
                 android:textSize="@dimen/text20" />
 
@@ -40,25 +41,25 @@
                 android:orientation="horizontal"
                 android:weightSum="2">
 
-                <TextView android:text="@{factsViewModel.description}"
+                <TextView
                     android:id="@+id/tv_facts_description"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1.8"
+                    android:text="@{factsViewModel.description}"
                     android:textColor="@color/colorBlack"
-                    android:textSize="@dimen/text15"
-                    />
+                    android:textSize="@dimen/text15" />
 
                 <ImageView
-                    tools:imageUrl="@{factsViewModel.image}"
                     android:id="@+id/imv_facts_pic"
-                    android:layout_width="@dimen/size50"
-                    android:layout_height="@dimen/size50"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_below="@+id/tv_facts_title"
                     android:layout_gravity="center_vertical"
                     android:layout_toLeftOf="@+id/imv_next"
-                    android:layout_toRightOf="@+id/tv_facts_description" />
+                    android:layout_toRightOf="@+id/tv_facts_description"
+                    tools:imageUrl="@{factsViewModel.image}" />
             </LinearLayout>
 
 
@@ -68,6 +69,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
                 android:layout_centerVertical="true"
+                android:scaleType="centerCrop"
                 android:src="@drawable/next" />
 
         </RelativeLayout>

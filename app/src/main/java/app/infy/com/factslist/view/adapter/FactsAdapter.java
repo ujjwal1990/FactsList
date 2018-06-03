@@ -1,5 +1,6 @@
 package app.infy.com.factslist.view.adapter;
 
+import android.content.Context;
 import android.databinding.DataBindingUtil;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -16,9 +17,11 @@ import app.infy.com.factslist.viewmodel.FactsListItemViewModel;
 public class FactsAdapter extends RecyclerView.Adapter<FactsAdapter.FactsAdapterViewHolder> {
 
     private List<Rows> factsList;
+    Context context;
 
-    public FactsAdapter() {
+    public FactsAdapter(Context context) {
         this.factsList = Collections.emptyList();
+        this.context = context;
     }
 
     @Override
@@ -29,7 +32,7 @@ public class FactsAdapter extends RecyclerView.Adapter<FactsAdapter.FactsAdapter
 
     @Override
     public void onBindViewHolder(FactsAdapterViewHolder holder, int position) {
-        holder.bindFacts(factsList.get(position));
+        holder.bindFacts(factsList.get(position), context);
     }
 
     @Override
@@ -44,14 +47,15 @@ public class FactsAdapter extends RecyclerView.Adapter<FactsAdapter.FactsAdapter
 
     public static class FactsAdapterViewHolder extends RecyclerView.ViewHolder {
         FactsRowItemsBinding mItemBinding;
+
         public FactsAdapterViewHolder(FactsRowItemsBinding mItemBinding) {
             super(mItemBinding.itemFacts);
             this.mItemBinding = mItemBinding;
         }
 
-        void bindFacts(Rows rows) {
+        void bindFacts(Rows rows, Context context) {
             if (mItemBinding.getFactsViewModel() == null) {
-                mItemBinding.setFactsViewModel(new FactsListItemViewModel(rows, itemView.getContext()));
+                mItemBinding.setFactsViewModel(new FactsListItemViewModel(rows, context));
             } else {
                 mItemBinding.getFactsViewModel().setRow(rows);
             }

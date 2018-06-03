@@ -1,6 +1,7 @@
 <resources>
     <dimen name="pad16">16dp</dimen>
     <dimen name="pad8">8dp</dimen>
+    <dimen name="pad4">4dp</dimen>
     <dimen name="size50">50dp</dimen>
     <dimen name="text20">20sp</dimen>
     <dimen name="text15">15sp</dimen>

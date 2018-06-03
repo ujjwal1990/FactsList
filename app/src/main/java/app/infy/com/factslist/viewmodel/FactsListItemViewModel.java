@@ -7,13 +7,14 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 
 import app.infy.com.factslist.model.Rows;
 
 public class FactsListItemViewModel extends BaseObservable {
 
     private Rows rows;
-    private Context context;
+    private static Context context;
 
     public FactsListItemViewModel(Rows rows, Context context) {
         this.rows = rows;
@@ -28,7 +29,7 @@ public class FactsListItemViewModel extends BaseObservable {
     // Loading Image using Glide Library.
     @BindingAdapter("imageUrl")
     public static void setImageUrl(ImageView imageView, String url) {
-        Glide.with(imageView.getContext()).load(url).into(imageView);
+        Glide.with(context).load(url).apply(new RequestOptions().override(150, 150).centerCrop()).into(imageView);
     }
 
 
