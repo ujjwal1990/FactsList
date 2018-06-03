@@ -5,6 +5,7 @@ import android.databinding.ObservableBoolean;
 import android.databinding.ObservableField;
 import android.databinding.ObservableInt;
 import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -27,7 +28,12 @@ import io.reactivex.functions.Consumer;
 /*view model class for fragment recyclerview it will handle all the network call updation of the recyclerview (for updation we used DataBinding)*/
 public class FactsViewModel extends Observable {
 
-    /*we are using observables to pretend the current state of the api call and showing the views based o these observables*/
+    NetworkClient mNetworkClient;
+    AppMain mAppController;
+    NetworkService mNetworkService;
+
+    /*we are using observables to pretend the current state of the api call and showing the
+     *views based o these observables*/
     /*progress obsevable to show progressbar before getting the data from api call*/
     public ObservableInt progressBar;
     /*pull to refresh observable*/
@@ -42,12 +48,27 @@ public class FactsViewModel extends Observable {
     public ObservableField<String> title;
     private String toolBarTitle;
     private List<Rows> factsList;
-    private Context context;
+    private Context mContext;
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
+
+    @VisibleForTesting
+    public void setNetworkClient(NetworkClient mNetworkClient) {
+        this.mNetworkClient = mNetworkClient;
+    }
+
+    @VisibleForTesting
+    public void setAppController(AppMain mAppController) {
+        this.mAppController = mAppController;
+    }
+
+    @VisibleForTesting
+    public void setNetworkService(NetworkService mNetworkService) {
+        this.mNetworkService = mNetworkService;
+    }
 
     /*constructor to init the data passing the context of the activity from fragment*/
     public FactsViewModel(@NonNull Context context) {
-        this.context = context;
+        this.mContext = context;
         this.factsList = new ArrayList<>();
 
         isRefreshing = new ObservableBoolean(false);
@@ -55,14 +76,17 @@ public class FactsViewModel extends Observable {
         factsRecycler = new ObservableInt(View.GONE);
         factsLabel = new ObservableInt(View.VISIBLE);
         title = new ObservableField<>(toolBarTitle);
-        messageLabel = new ObservableField<>(context.getString(R.string.error_message_loading_facts));
-
+        messageLabel = new ObservableField<>(mContext.getString(R.string.error_message_loading_facts));
+        mAppController = new AppMain();
+        /*object for network client to get the retrofit object*/
+        mNetworkClient = new NetworkClient();
+        mNetworkService = mNetworkClient.getRetrofit().create(NetworkService.class);
         checkNetworkAndMakeApiCall();
     }
 
     /*methos to check the network before making he api call*/
     public void checkNetworkAndMakeApiCall() {
-        if (AppUtils.isOnline(context)) {
+        if (AppUtils.isOnline(mContext)) {
             setUpToGetDataFromApi();
         } else {
             showNetworkMessage();
@@ -71,7 +95,7 @@ public class FactsViewModel extends Observable {
 
     /*methos to show the network not available message*/
     public void showNetworkMessage() {
-        messageLabel = new ObservableField<>(context.getString(R.string.no_internet));
+        messageLabel = new ObservableField<>(mContext.getString(R.string.no_internet));
         isRefreshing.set(false);
         factsLabel.set(View.VISIBLE);
         factsRecycler.set(View.VISIBLE);
@@ -89,6 +113,7 @@ public class FactsViewModel extends Observable {
 
     /*methos for pull to refresh*/
     public void pullToRefresh() {
+        getFactsList().clear();
         isRefreshing.set(true);
         factsLabel.set(View.GONE);
         factsRecycler.set(View.VISIBLE);
@@ -98,18 +123,18 @@ public class FactsViewModel extends Observable {
 
     /*RXJava 2 call to get the data from the hosted api*/
     private void fetchFactsList() {
-        AppMain appController = new AppMain();
-        /*object for network client to get the retrofit object*/
-        NetworkClient networkClient = new NetworkClient();
+//        AppMain appController = new AppMain();
+//        /*object for network client to get the retrofit object*/
+//        NetworkClient networkClient = new NetworkClient();
         /*object for getting the api instance
          * NOTE
          * create() is specifying the api type call
          * */
-        NetworkService networkService = networkClient.getRetrofit().create(NetworkService.class);
+
 
         /*api disposable data object*/
-        Disposable disposable = networkService.getFactsData(AppConstants.FACTS_PATH)
-                .subscribeOn(appController.subscribeScheduler())
+        Disposable disposable = mNetworkService.getFactsData(AppConstants.FACTS_PATH)
+                .subscribeOn(mAppController.subscribeScheduler())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<FactsDataResponse>() {
                     @Override
@@ -125,7 +150,7 @@ public class FactsViewModel extends Observable {
                     @Override
                     public void accept(Throwable throwable) throws Exception {
                         isRefreshing.set(false);
-                        messageLabel.set(context.getString(R.string.error_message_loading_facts));
+                        messageLabel.set(mContext.getString(R.string.error_message_loading_facts));
                         progressBar.set(View.GONE);
                         factsLabel.set(View.VISIBLE);
                         factsRecycler.set(View.GONE);
@@ -172,6 +197,6 @@ public class FactsViewModel extends Observable {
     public void reset() {
         unSubscribeFromObservable();
         compositeDisposable = null;
-        context = null;
+        mContext = null;
     }
 }

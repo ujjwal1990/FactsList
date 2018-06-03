@@ -107,6 +107,5 @@ public class FactsListFragment extends Fragment implements Observer, SwipeRefres
         /*assuming whenever we will pull the data it should be latest one so clearing the
          existing data in the list and making the api call */
         mFactsViewModel.pullToRefresh();
-        mFactsViewModel.getFactsList().clear();
     }
 }
