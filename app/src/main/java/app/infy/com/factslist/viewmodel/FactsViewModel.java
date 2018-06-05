@@ -6,11 +6,15 @@ import android.databinding.ObservableField;
 import android.databinding.ObservableInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
+import android.util.Log;
 import android.view.View;
+
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
+import java.util.concurrent.Callable;
 
 import app.infy.com.factslist.R;
 import app.infy.com.factslist.app.AppMain;
@@ -19,11 +23,15 @@ import app.infy.com.factslist.model.Rows;
 import app.infy.com.factslist.network.NetworkClient;
 import app.infy.com.factslist.network.NetworkService;
 import app.infy.com.factslist.utils.AppConstants;
+import app.infy.com.factslist.utils.AppPreferences;
 import app.infy.com.factslist.utils.AppUtils;
+import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
+import io.reactivex.observers.DisposableObserver;
+import io.reactivex.schedulers.Schedulers;
 
 /*view model class for fragment recyclerview it will handle all the network call updation of the recyclerview (for updation we used DataBinding)*/
 public class FactsViewModel extends Observable {
@@ -46,7 +54,7 @@ public class FactsViewModel extends Observable {
     public ObservableField<String> messageLabel;
 
     public ObservableField<String> title;
-    private  String toolBarTitle;
+    private String toolBarTitle;
     private List<Rows> factsList;
     public Context mContext;
     public CompositeDisposable compositeDisposable = new CompositeDisposable();
@@ -80,7 +88,11 @@ public class FactsViewModel extends Observable {
         mAppController = new AppMain();
         /*object for network client to get the retrofit object*/
         mNetworkClient = new NetworkClient();
-        mNetworkService = mNetworkClient.getRetrofit().create(NetworkService.class);
+        /*object for getting the api instance
+         * NOTE
+         * create() is specifying the api type call
+         * */
+        mNetworkService = mNetworkClient.getRetrofit(mContext).create(NetworkService.class);
         checkNetworkAndMakeApiCall();
     }
 
@@ -100,6 +112,7 @@ public class FactsViewModel extends Observable {
         factsLabel.set(View.VISIBLE);
         factsRecycler.set(View.VISIBLE);
         progressBar.set(View.GONE);
+        createCompositeDisposableForOffline();
     }
 
     /*methos to make the api call and showing the progress bar till response*/
@@ -113,25 +126,15 @@ public class FactsViewModel extends Observable {
 
     /*methos for pull to refresh*/
     public void pullToRefresh() {
-        getFactsList().clear();
         isRefreshing.set(true);
         factsLabel.set(View.GONE);
         factsRecycler.set(View.VISIBLE);
         progressBar.set(View.GONE);
-        fetchFactsList();
+        checkNetworkAndMakeApiCall();
     }
 
     /*RXJava 2 call to get the data from the hosted api*/
     private void fetchFactsList() {
-//        AppMain appController = new AppMain();
-//        /*object for network client to get the retrofit object*/
-//        NetworkClient networkClient = new NetworkClient();
-        /*object for getting the api instance
-         * NOTE
-         * create() is specifying the api type call
-         * */
-
-
         /*api disposable data object*/
         Disposable disposable = mNetworkService.getFactsData(AppConstants.FACTS_PATH)
                 .subscribeOn(mAppController.subscribeScheduler())
@@ -139,25 +142,83 @@ public class FactsViewModel extends Observable {
                 .subscribe(new Consumer<FactsDataResponse>() {
                     @Override
                     public void accept(FactsDataResponse factsResponse) throws Exception {
-                        setTollBarTitle(factsResponse.getTitle());
-                        updateFactsDataList(factsResponse.getRows());
-                        isRefreshing.set(false);
-                        progressBar.set(View.GONE);
-                        factsLabel.set(View.GONE);
-                        factsRecycler.set(View.VISIBLE);
+                        Gson gson = new Gson();
+                        String favData = gson.toJson(factsResponse);
+                        AppPreferences.putString(AppConstants.RESPONSE_DATA, favData, mContext);
+                        showDataOnSuccessFullResponse(factsResponse);
                     }
                 }, new Consumer<Throwable>() {
                     @Override
                     public void accept(Throwable throwable) throws Exception {
-                        isRefreshing.set(false);
-                        messageLabel.set(mContext.getString(R.string.error_message_loading_facts));
-                        progressBar.set(View.GONE);
-                        factsLabel.set(View.VISIBLE);
-                        factsRecycler.set(View.GONE);
+                        setUpViewsOnError();
                     }
                 });
 
         compositeDisposable.add(disposable);
+    }
+
+    /*method to create the createCompositeDisposable for the cached data*/
+    private void createCompositeDisposableForOffline() {
+        compositeDisposable.add(sampleObservable()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(new DisposableObserver<FactsDataResponse>() {
+                    @Override
+                    public void onComplete() {
+                        Log.i("", "onComplete");
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        setUpViewsOnError();
+                    }
+
+                    @Override
+                    public void onNext(FactsDataResponse factsDataResponse) {
+                        showDataOnSuccessFullResponse(factsDataResponse);
+                    }
+                }));
+    }
+
+    /*method to create the Observable for the cached data*/
+    private io.reactivex.Observable<FactsDataResponse> sampleObservable() {
+        return io.reactivex.Observable.defer(new Callable<ObservableSource<? extends FactsDataResponse>>() {
+            @Override
+            public ObservableSource<? extends FactsDataResponse> call() throws Exception {
+                // Do some long running operation
+                String cacheResp = AppPreferences.getString(AppConstants.RESPONSE_DATA, mContext);
+                return io.reactivex.Observable.just(new Gson().fromJson(cacheResp, FactsDataResponse.class));
+            }
+        });
+    }
+
+    /*method to show the data on success response*/
+    private void showDataOnSuccessFullResponse(FactsDataResponse factsResponse) {
+        getFactsList().clear();
+        setTollBarTitle(factsResponse.getTitle());
+        updateFactsDataList(factsResponse.getRows());
+        isRefreshing.set(false);
+        progressBar.set(View.GONE);
+        if (AppUtils.isOnline(mContext)){
+            factsLabel.set(View.GONE);
+        }else{
+            factsLabel.set(View.VISIBLE);
+        }
+
+        factsRecycler.set(View.VISIBLE);
+    }
+
+    /*method to show the error messages in eror case*/
+    private void setUpViewsOnError() {
+        isRefreshing.set(false);
+        if (AppUtils.isOnline(mContext)){
+            messageLabel.set(mContext.getString(R.string.error_message_loading_facts));
+        }else{
+            messageLabel.set(mContext.getString(R.string.no_internet));
+        }
+        progressBar.set(View.GONE);
+        factsLabel.set(View.VISIBLE);
+        factsRecycler.set(View.GONE);
     }
 
     /*methos to update the List based on the recent response */

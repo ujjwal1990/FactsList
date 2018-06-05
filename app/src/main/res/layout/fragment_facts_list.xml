@@ -14,7 +14,7 @@
     </data>
 
 
-    <FrameLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
@@ -24,6 +24,7 @@
             android:id="@+id/swipe_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_below="@+id/label_status"
             app:refreshing="@{factsViewModel.isRefreshing}">
 
             <android.support.v7.widget.RecyclerView
@@ -38,19 +39,20 @@
             android:id="@+id/progress_bar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_centerInParent="true"
             app:visibility="@{factsViewModel.progressBar}" />
 
         <TextView
             android:id="@+id/label_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_centerHorizontal="true"
             android:gravity="center"
+            android:padding="@dimen/pad4"
             android:text="@{factsViewModel.messageLabel}"
             app:visibility="@{factsViewModel.factsLabel}" />
 
-    </FrameLayout>
+    </RelativeLayout>
 
 
 </layout>
